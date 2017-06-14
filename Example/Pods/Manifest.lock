@@ -1,0 +1,33 @@
+PODS:
+  - LoremIpsum (1.0.0)
+  - MagicalRecord (2.3.2):
+    - MagicalRecord/Core (= 2.3.2)
+  - MagicalRecord/Core (2.3.2)
+
+DEPENDENCIES:
+  - LoremIpsum (from `https://github.com/lukaskubanek/LoremIpsum`, tag `v1.0.0`)
+  - MagicalRecord (from `https://github.com/magicalpanda/MagicalRecord`, tag `v2.3.2`)
+
+EXTERNAL SOURCES:
+  LoremIpsum:
+    :git: https://github.com/lukaskubanek/LoremIpsum
+    :tag: v1.0.0
+  MagicalRecord:
+    :git: https://github.com/magicalpanda/MagicalRecord
+    :tag: v2.3.2
+
+CHECKOUT OPTIONS:
+  LoremIpsum:
+    :git: https://github.com/lukaskubanek/LoremIpsum
+    :tag: v1.0.0
+  MagicalRecord:
+    :git: https://github.com/magicalpanda/MagicalRecord
+    :tag: v2.3.2
+
+SPEC CHECKSUMS:
+  LoremIpsum: 9029c55d36501b2ee0b05cc9ecda11d3a0479160
+  MagicalRecord: 09fd9239f3613bad1bca7dd9e556affc510631eb
+
+PODFILE CHECKSUM: d584bb3d30a84fbbf9a41a2c6fd576c659a1f04c
+
+COCOAPODS: 1.2.1

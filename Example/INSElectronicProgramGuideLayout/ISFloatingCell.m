@@ -7,7 +7,6 @@
 //
 
 #import "ISFloatingCell.h"
-#import <UIColor+MLPFlatColors/UIColor+MLPFlatColors.h>
 
 @implementation ISFloatingCell
 
@@ -25,7 +24,7 @@
 {
     [super awakeFromNib];
 
-    UIColor *randomColor = [UIColor randomFlatLightColor];
+    UIColor *randomColor = [UIColor blueColor];
     self.topBorderView.backgroundColor = randomColor;
     self.leftBorderView.backgroundColor = randomColor;
 
