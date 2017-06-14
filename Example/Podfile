@@ -1,9 +1,8 @@
-platform :ios, "7.0"
+platform :ios, "9.0"
 
 target 'INSElectronicProgramGuideLayout' do
-  pod 'MagicalRecord'
-  pod 'UIColor+MLPFlatColors'
-  pod 'LoremIpsum'
+  pod 'MagicalRecord' , :git => 'https://github.com/magicalpanda/MagicalRecord', :tag => 'v2.3.2'
+  pod 'LoremIpsum' , :git => 'https://github.com/lukaskubanek/LoremIpsum', :tag => 'v1.0.0'
 end
 
 inhibit_all_warnings!
