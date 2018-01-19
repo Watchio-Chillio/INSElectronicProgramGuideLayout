@@ -150,6 +150,11 @@ typedef NS_ENUM(NSUInteger, INSElectronicProgramGuideLayoutType) {
 // Since a "reloadData" on the UICollectionView doesn't call "prepareForCollectionViewUpdates:", this method must be called first to flush the internal caches
 - (void)invalidateLayoutCache;
 
+/**
+ *  Workaround to calculate current time vertical gridline height.
+ */
+@property (nonatomic, assign) NSUInteger numberOfChannels;
+
 @end
 
 @protocol INSElectronicProgramGuideLayoutDataSource <UICollectionViewDataSource>

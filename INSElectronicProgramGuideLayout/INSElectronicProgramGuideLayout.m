@@ -190,6 +190,8 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
 
     self.headerLayoutType = INSElectronicProgramGuideLayoutTypeTimeRowAboveDayColumn;
 
+    self.numberOfChannels = 0;
+
     // Invalidate layout on minute ticks (to update the position of the current time indicator)
     NSDate *oneMinuteInFuture = [[NSDate date] dateByAddingTimeInterval:60];
     NSDateComponents *components = [[NSCalendar currentCalendar] components:(NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit) fromDate:oneMinuteInFuture];
@@ -657,7 +659,7 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
 
         CGFloat currentTimeVerticalGridlineMinY = (self.shouldResizeStickyHeaders ? fmaxf(self.hourHeaderHeight, self.collectionView.contentOffset.y + [self minimumGridY]) : self.collectionView.contentOffset.y + [self minimumGridY]);
 
-        CGFloat gridHeight = (self.collectionViewContentSize.height + currentTimeVerticalGridlineMinY);
+        CGFloat gridHeight = self.numberOfChannels * self.sectionHeight;
 
         currentTimeHorizontalGridlineAttributes.frame = (CGRect){ {xPositionToCurrentDate - self.currentTimeVerticalGridlineWidth/2, currentTimeVerticalGridlineMinY}, {self.currentTimeVerticalGridlineWidth, gridHeight} };
         currentTimeHorizontalGridlineAttributes.zIndex = [self zIndexForElementKind:INSEPGLayoutElementKindCurrentTimeIndicatorVerticalGridline];
