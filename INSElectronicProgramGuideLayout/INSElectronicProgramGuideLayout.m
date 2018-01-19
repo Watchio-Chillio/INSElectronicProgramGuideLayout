@@ -186,7 +186,7 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
     self.shouldResizeStickyHeaders = NO;
 
     // Set CurrentTime Behind cell
-    self.currentTimeIndicatorShouldBeBehind = YES;
+    self.currentTimeIndicatorShouldBeBehind = NO;
 
     self.headerLayoutType = INSElectronicProgramGuideLayoutTypeTimeRowAboveDayColumn;
 
