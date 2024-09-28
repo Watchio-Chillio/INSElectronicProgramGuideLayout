@@ -42,6 +42,8 @@ extern NSString *const INSEPGLayoutElementKindHorizontalGridline;
 
 extern NSString *const INSEPGLayoutElementKindFloatingItemOverlay;
 
+extern NSString *const INSEPGLayoutElementKindEmptySlotBackground;
+
 extern NSUInteger const INSEPGLayoutMinOverlayZ;
 extern NSUInteger const INSEPGLayoutMinCellZ;
 extern NSUInteger const INSEPGLayoutMinBackgroundZ;
