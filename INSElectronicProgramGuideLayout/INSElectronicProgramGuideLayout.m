@@ -226,6 +226,30 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   return [self.cachedHalfHours objectForKey:indexPath];
 }
 
+- (CGSize)sizeForCellAtIndexPath:(NSIndexPath *)indexPath {
+  // Get the start and end dates for the item at the provided indexPath
+  NSDate *startDate = [self startDateForIndexPath:indexPath];
+  NSDate *endDate = [self endDateForIndexPath:indexPath];
+  
+  // Ensure startDate and endDate are valid
+  if (!startDate || !endDate) {
+    return CGSizeZero;
+  }
+  
+  // Calculate the time interval (in seconds) between the start and end dates
+  NSTimeInterval timeInterval = [endDate timeIntervalSinceDate:startDate];
+  
+  // Calculate the width based on the minuteWidth and the time interval
+  // self.minuteWidth gives the width for one minute of time
+  CGFloat width = (timeInterval / 60.0) * self.minuteWidth;
+  
+  // Use sectionHeight as the default height for the cell
+  CGFloat height = self.sectionHeight;
+  
+  // Return the size for the cell
+  return CGSizeMake(width, height);
+}
+
 - (void)scrollToCurrentTimeAnimated:(BOOL)animated
 {
   if (self.collectionView.numberOfSections > 0) {
@@ -480,6 +504,8 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
 - (void)prepareFloatingItemAttributesOverlayForSection:(NSUInteger)section sectionFrame:(CGRect)rect
 {
   CGFloat floatingGridMinX = fmaxf(self.collectionView.contentOffset.x, 0.0) + self.sectionHeaderWidth + self.floatingItemOffsetFromSection;
+  CGFloat collectionViewWidth = self.collectionView.bounds.size.width;
+  CGFloat collectionViewMaxX = self.collectionView.contentOffset.x + collectionViewWidth;
   
   for (NSUInteger item = 0; item < [self.collectionView numberOfItemsInSection:section]; item++) {
     
@@ -499,6 +525,21 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
     
     CGSize floatingItemSize = [self floatingItemOverlaySizeForIndexPath:floatingItemIndexPath];
     
+    // Determine if the floating item needs to shrink based on visibility
+    if (self.shouldShrinkFloatingOverlay) {
+      CGFloat visibleMinX = fmaxf(itemAttributesFrame.origin.x, floatingGridMinX);
+      CGFloat visibleMaxX = fminf(CGRectGetMaxX(itemAttributesFrame), collectionViewMaxX);
+      
+      if (visibleMaxX > visibleMinX) {
+        // Calculate visible width as a proportion of the total item width
+        CGFloat visibleWidth = visibleMaxX - visibleMinX;
+        floatingItemSize.width = fminf(floatingItemSize.width, visibleWidth);
+      } else {
+        // If the item is fully off-screen, shrink the size to 0
+        floatingItemSize.width = 0;
+      }
+    }
+    
     if (floatingItemSize.width >= itemAttributesFrame.size.width) {
       floatingItemAttributes.frame = itemAttributesFrame;
     } else {
@@ -510,13 +551,13 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
         
         floatingItemAttributes.frame = (CGRect){ {itemAttributesFrame.origin.x + floatingSpace, itemAttributesFrame.origin.y} , floatingItemSize};
         
-        //Floating
+        // Adjust floating position if it overlaps with the floating grid
         if (floatingGridMinX <= floatingItemAttributes.frame.origin.x && floatingGridMinX >= itemAttributesFrame.origin.x) {
           floatingItemAttributes.frame = (CGRect){ {floatingGridMinX, floatingItemAttributes.frame.origin.y} , floatingItemSize};
         }
-        
       }
     }
+    
     floatingItemAttributes.zIndex = [self zIndexForElementKind:INSEPGLayoutElementKindFloatingItemOverlay floating:YES];
   }
 }

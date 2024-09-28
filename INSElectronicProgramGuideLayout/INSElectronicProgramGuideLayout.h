@@ -128,6 +128,8 @@ typedef NS_ENUM(NSUInteger, INSElectronicProgramGuideLayoutType) {
  */
 @property (nonatomic, assign) BOOL shouldUseFloatingItemOverlay;
 
+@property (nonatomic, assign) BOOL shouldShrinkFloatingOverlay;
+
 @property (nonatomic, weak) id <INSElectronicProgramGuideLayoutDataSource> dataSource;
 @property (nonatomic, weak) id <INSElectronicProgramGuideLayoutDelegate> delegate;
 
@@ -143,6 +145,8 @@ typedef NS_ENUM(NSUInteger, INSElectronicProgramGuideLayoutType) {
 
 - (NSDate *)dateForHourHeaderAtIndexPath:(NSIndexPath *)indexPath;
 - (NSDate *)dateForHalfHourHeaderAtIndexPath:(NSIndexPath *)indexPath;
+
+- (CGSize)sizeForCellAtIndexPath:(NSIndexPath *)indexPath;
 
 /**
  *  Scrolling to current time on timeline
