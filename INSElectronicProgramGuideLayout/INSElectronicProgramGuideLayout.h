@@ -80,6 +80,8 @@ typedef NS_ENUM(NSUInteger, INSElectronicProgramGuideLayoutType) {
  */
 @property (nonatomic, assign) BOOL currentTimeIndicatorShouldBeBehind;
 
+@property (nonatomic, assign) BOOL showsTimeIndicatorAsScreenGuide;
+
 
 /**
  *  Gridlines size

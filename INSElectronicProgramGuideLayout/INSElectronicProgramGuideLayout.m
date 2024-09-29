@@ -693,26 +693,54 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   UICollectionViewLayoutAttributes *currentTimeHorizontalGridlineAttributes = [self layoutAttributesForDecorationViewAtIndexPath:currentTimeHorizontalGridlineIndexPath ofKind:INSEPGLayoutElementKindCurrentTimeIndicatorVerticalGridline withItemCache:self.currentTimeVerticalGridlineAttributes];
   
   NSDate *currentDate = [self currentDate];
-  BOOL currentTimeIndicatorVisible = ([currentDate ins_isLaterThanOrEqualTo:[self earliestDate]] && [currentDate ins_isEarlierThan:[self latestDate]]);
-  currentTimeIndicatorAttributes.hidden = !currentTimeIndicatorVisible;
-  currentTimeHorizontalGridlineAttributes.hidden = !currentTimeIndicatorVisible;
   
-  if (currentTimeIndicatorVisible) {
+  // Calculate the x position for the current date
+  CGFloat xPositionToCurrentDate = [self xCoordinateForDate:currentDate];
+  
+  // Get the visible bounds of the collection view
+  CGFloat visibleMinX = self.collectionView.contentOffset.x;
+  CGFloat visibleMaxX = visibleMinX + self.collectionView.bounds.size.width;
+  
+  // Check if the current time is within the visible bounds
+  BOOL currentTimeIndicatorVisibleOnScreen = (xPositionToCurrentDate >= visibleMinX && xPositionToCurrentDate <= visibleMaxX);
+  
+  // Vertical positioning and size remain the same, only modify the x position
+  CGFloat currentTimeIndicatorMinY = (self.shouldResizeStickyHeaders ? fmaxf(self.collectionView.contentOffset.y, 0.0) : self.collectionView.contentOffset.y + (self.hourHeaderHeight - self.currentTimeIndicatorSize.height)) + self.collectionView.contentInset.top;
+  CGFloat currentTimeVerticalGridlineMinY = (self.shouldResizeStickyHeaders ? fmaxf(self.hourHeaderHeight, self.collectionView.contentOffset.y + [self minimumGridY]) : self.collectionView.contentOffset.y + [self minimumGridY]);
+  CGFloat gridHeight = self.numberOfChannels * self.sectionHeight + ((self.numberOfChannels - 1) * self.sectionGap);
+  
+  if (self.showsTimeIndicatorAsScreenGuide && !currentTimeIndicatorVisibleOnScreen) {
+    // If the current time is off-screen, place the vertical gridline on the left or right edge
+    CGFloat edgeX = 0;
+    if (xPositionToCurrentDate < visibleMinX) {
+      // Current time is off-screen to the left, place vertical gridline on the left edge
+      edgeX = visibleMinX;
+    } else if (xPositionToCurrentDate > visibleMaxX) {
+      // Current time is off-screen to the right, place vertical gridline on the right edge
+      edgeX = visibleMaxX - self.currentTimeVerticalGridlineWidth;
+    }
     
-    CGFloat xPositionToCurrentDate = [self xCoordinateForDate:currentDate];
+    // Adjust the x position of the vertical gridline
+    currentTimeHorizontalGridlineAttributes.frame = (CGRect){ {edgeX, currentTimeVerticalGridlineMinY}, {self.currentTimeVerticalGridlineWidth, gridHeight} };
     
-    CGFloat currentTimeIndicatorMinX = xPositionToCurrentDate - nearbyintf(self.currentTimeIndicatorSize.width / 2.0);
-    CGFloat currentTimeIndicatorMinY = ( self.shouldResizeStickyHeaders ? fmaxf(self.collectionView.contentOffset.y, 0.0) : self.collectionView.contentOffset.y + (self.hourHeaderHeight - self.currentTimeIndicatorSize.height)) + self.collectionView.contentInset.top;
+    // Center the currentTimeIndicatorAttributes on the currentTimeHorizontalGridlineAttributes
+    CGFloat currentTimeIndicatorMinX = edgeX - (self.currentTimeIndicatorSize.width / 2.0) + (self.currentTimeVerticalGridlineWidth / 2.0);
     currentTimeIndicatorAttributes.frame = (CGRect){ {currentTimeIndicatorMinX, currentTimeIndicatorMinY}, self.currentTimeIndicatorSize };
-    currentTimeIndicatorAttributes.zIndex = [self zIndexForElementKind:INSEPGLayoutElementKindCurrentTimeIndicator floating:YES];
+  } else {
+    // If the current time is within the visible bounds, set the x position of both elements normally
+    CGFloat currentTimeIndicatorMinX = xPositionToCurrentDate - nearbyintf(self.currentTimeIndicatorSize.width / 2.0);
     
-    CGFloat currentTimeVerticalGridlineMinY = (self.shouldResizeStickyHeaders ? fmaxf(self.hourHeaderHeight, self.collectionView.contentOffset.y + [self minimumGridY]) : self.collectionView.contentOffset.y + [self minimumGridY]);
-    
-    CGFloat gridHeight = self.numberOfChannels * self.sectionHeight + ((self.numberOfChannels - 1) * self.sectionGap);
-    
-    currentTimeHorizontalGridlineAttributes.frame = (CGRect){ {xPositionToCurrentDate - self.currentTimeVerticalGridlineWidth/2, currentTimeVerticalGridlineMinY}, {self.currentTimeVerticalGridlineWidth, gridHeight} };
-    currentTimeHorizontalGridlineAttributes.zIndex = [self zIndexForElementKind:INSEPGLayoutElementKindCurrentTimeIndicatorVerticalGridline];
+    currentTimeIndicatorAttributes.frame = (CGRect){ {currentTimeIndicatorMinX, currentTimeIndicatorMinY}, self.currentTimeIndicatorSize };
+    currentTimeHorizontalGridlineAttributes.frame = (CGRect){ {xPositionToCurrentDate - self.currentTimeVerticalGridlineWidth / 2, currentTimeVerticalGridlineMinY}, {self.currentTimeVerticalGridlineWidth, gridHeight} };
   }
+  
+  // Ensure that both the indicator and gridline are always visible
+  currentTimeIndicatorAttributes.hidden = NO;
+  currentTimeHorizontalGridlineAttributes.hidden = NO;
+  
+  // Set the z-index to ensure the indicator and gridline appear above other elements
+  currentTimeIndicatorAttributes.zIndex = [self zIndexForElementKind:INSEPGLayoutElementKindCurrentTimeIndicator floating:YES];
+  currentTimeHorizontalGridlineAttributes.zIndex = [self zIndexForElementKind:INSEPGLayoutElementKindCurrentTimeIndicatorVerticalGridline floating:YES];
 }
 
 - (void)prepareSectionHeaderBackgroundAttributes
