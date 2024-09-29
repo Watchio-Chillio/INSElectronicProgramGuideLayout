@@ -562,11 +562,9 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   }
 }
 
-- (void)prepareItemAttributesForSection:(NSUInteger)section sectionFrame:(CGRect)rect
-{
+- (void)prepareItemAttributesForSection:(NSUInteger)section sectionFrame:(CGRect)rect {
   for (NSUInteger item = 0; item < [self.collectionView numberOfItemsInSection:section]; item++) {
     NSIndexPath *itemIndexPath = [NSIndexPath indexPathForItem:item inSection:section];
-    
     NSDate *itemEndTime = [self endDateForIndexPath:itemIndexPath];
     
     if ([itemEndTime ins_isLaterThan:[self latestDate]] || [itemEndTime ins_isEarlierThan:[self earliestDate]]) {
@@ -574,15 +572,14 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
     }
     
     NSDate *itemStartTime = [self startDateForIndexPath:itemIndexPath];
-    
     CGFloat itemStartTimePositionX = [self xCoordinateForDate:itemStartTime];
+    itemStartTimePositionX = fmax(itemStartTimePositionX, self.collectionView.contentOffset.x);
+
     CGFloat itemEndTimePositionX = [self xCoordinateForDate:itemEndTime];
     CGFloat itemWidth = itemEndTimePositionX - itemStartTimePositionX;
-    
     UICollectionViewLayoutAttributes *itemAttributes = [self layoutAttributesForCellAtIndexPath:itemIndexPath withItemCache:self.itemAttributes];
     itemAttributes.frame = CGRectMake(itemStartTimePositionX + self.cellMargin.left, rect.origin.y + self.cellMargin.top, itemWidth - self.cellMargin.left - self.cellMargin.right, rect.size.height - self.cellMargin.top - self.cellMargin.bottom);
     itemAttributes.zIndex = [self zIndexForElementKind:nil];
-    
   }
 }
 
@@ -597,9 +594,8 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   sectionAttributes.frame = CGRectMake(sectionMinX, sectionY, self.sectionHeaderWidth, self.sectionHeight);
   sectionAttributes.zIndex = [self zIndexForElementKind:INSEPGLayoutElementKindSectionHeader floating:YES];
   
-  if (needsToPopulateItemAttributes) {
-    [self prepareItemAttributesForSection:section sectionFrame:sectionAttributes.frame];
-  }
+  [self prepareItemAttributesForSection:section sectionFrame:sectionAttributes.frame];
+  
   if (self.shouldUseFloatingItemOverlay) {
     [self prepareFloatingItemAttributesOverlayForSection:section sectionFrame:sectionAttributes.frame];
   }
