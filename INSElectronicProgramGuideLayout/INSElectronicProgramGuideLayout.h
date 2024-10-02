@@ -140,6 +140,8 @@ typedef NS_ENUM(NSUInteger, INSElectronicProgramGuideLayoutType) {
  */
 - (CGFloat)xCoordinateForDate:(NSDate *)date;
 
+- (CGFloat)midYForSectionAtIndexPath:(NSIndexPath *)indexPath;
+
 /**
  * Returns date for x-axis position on collection view content view.
  */

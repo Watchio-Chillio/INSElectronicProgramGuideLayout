@@ -474,6 +474,19 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   return self.hourHeaderHeight + self.contentMargin.top + self.collectionView.contentInset.top;
 }
 
+- (CGFloat)midYForSectionAtIndexPath:(NSIndexPath *)indexPath {
+  // Calculate the starting Y-position of the section
+  CGFloat sectionMinY = self.hourHeaderHeight + self.contentMargin.top;
+  
+  // Calculate the Y-position for the specific section
+  CGFloat sectionY = sectionMinY + ((self.sectionHeight + self.sectionGap) * indexPath.section);
+  
+  // Calculate the mid-Y position
+  CGFloat sectionMidY = sectionY + (self.sectionHeight / 2.0);
+  
+  return sectionMidY;
+}
+
 #pragma mark - Preparing Layout
 
 - (void)prepareSectionLayoutForSections:(NSIndexSet *)sectionIndexes
