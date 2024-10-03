@@ -38,6 +38,7 @@ NSString *const INSEPGLayoutElementKindHalfHourVerticalGridline = @"INSEPGLayout
 NSString *const INSEPGLayoutElementKindHorizontalGridline = @"INSEPGLayoutElementKindHorizontalGridline";
 NSString *const INSEPGLayoutElementKindFloatingItemOverlay = @"INSEPGLayoutElementKindFloatingItemOverlay";
 NSString *const INSEPGLayoutElementKindEmptySlotBackground = @"INSEPGLayoutElementKindEmptySlotBackground";
+NSString *const INSEPGLayoutElementKindEmptySectionBackground = @"INSEPGLayoutElementKindEmptySectionBackground";
 
 NSUInteger const INSEPGLayoutMinOverlayZ = 1000.0; // Allows for 900 items in a section without z overlap issues
 NSUInteger const INSEPGLayoutMinCellZ = 100.0;  // Allows for 100 items in a section's background
@@ -74,6 +75,7 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
 @property (nonatomic, strong) NSMutableDictionary *itemAttributes;
 @property (nonatomic, strong) NSMutableDictionary *floatingItemAttributes;
 @property (nonatomic, strong) NSMutableDictionary *emptySlotBackground;
+@property (nonatomic, strong) NSMutableDictionary *emptySectionBackground;
 @property (nonatomic, strong) NSMutableDictionary *sectionHeaderAttributes;
 @property (nonatomic, strong) NSMutableDictionary *sectionHeaderBackgroundAttributes;
 @property (nonatomic, strong) NSMutableDictionary *hourHeaderAttributes;
@@ -169,6 +171,7 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   self.itemAttributes = [NSMutableDictionary new];
   self.floatingItemAttributes = [NSMutableDictionary new];
   self.emptySlotBackground = [NSMutableDictionary new];
+  self.emptySectionBackground = [NSMutableDictionary new];
   self.sectionHeaderAttributes = [NSMutableDictionary new];
   self.sectionHeaderBackgroundAttributes = [NSMutableDictionary new];
   self.hourHeaderAttributes = [NSMutableDictionary new];
@@ -305,6 +308,7 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   [self.itemAttributes removeAllObjects];
   [self.floatingItemAttributes removeAllObjects];
   [self.emptySlotBackground removeAllObjects];
+  [self.emptySectionBackground removeAllObjects];
   [self.sectionHeaderAttributes removeAllObjects];
   [self.sectionHeaderBackgroundAttributes removeAllObjects];
   [self.hourHeaderAttributes removeAllObjects];
@@ -429,6 +433,7 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
     [self.allAttributes addObjectsFromArray:[self.currentTimeVerticalGridlineAttributes allValues]];
     [self.allAttributes addObjectsFromArray:[self.floatingItemAttributes allValues]];
     [self.allAttributes addObjectsFromArray:[self.emptySlotBackground allValues]];
+    [self.allAttributes addObjectsFromArray:[self.emptySectionBackground allValues]];
   }
 }
 
@@ -598,20 +603,46 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
 
 - (void)prepareSectionAttributes:(NSUInteger)section needsToPopulateItemAttributes:(BOOL)needsToPopulateItemAttributes
 {
-  CGFloat sectionMinY = self.hourHeaderHeight + self.contentMargin.top;
   CGFloat sectionMinX = self.shouldResizeStickyHeaders ? fmaxf(self.collectionView.contentOffset.x, 0.0) : self.collectionView.contentOffset.x;
+  CGFloat sectionMinY = self.hourHeaderHeight + self.contentMargin.top;
   
   CGFloat sectionY = sectionMinY + ((self.sectionHeight + self.sectionGap) * section);
   NSIndexPath *sectionIndexPath = [NSIndexPath indexPathForItem:0 inSection:section];
+  
   UICollectionViewLayoutAttributes *sectionAttributes = [self layoutAttributesForSupplementaryViewAtIndexPath:sectionIndexPath ofKind:INSEPGLayoutElementKindSectionHeader withItemCache:self.sectionHeaderAttributes];
   sectionAttributes.frame = CGRectMake(sectionMinX, sectionY, self.sectionHeaderWidth, self.sectionHeight);
   sectionAttributes.zIndex = [self zIndexForElementKind:INSEPGLayoutElementKindSectionHeader floating:YES];
   
-  [self prepareItemAttributesForSection:section sectionFrame:sectionAttributes.frame];
-  
-  if (self.shouldUseFloatingItemOverlay) {
-    [self prepareFloatingItemAttributesOverlayForSection:section sectionFrame:sectionAttributes.frame];
+  if ([self sectionHasNoPrograms:section]) {
+    [self _prepareEmptySectionBackgroundAttributes:section sectionFrame:sectionAttributes.frame];
+  } else {
+    [self prepareItemAttributesForSection:section sectionFrame:sectionAttributes.frame];
+    if (self.shouldUseFloatingItemOverlay) {
+      [self prepareFloatingItemAttributesOverlayForSection:section sectionFrame:sectionAttributes.frame];
+    }
   }
+}
+
+- (void)_prepareEmptySectionBackgroundAttributes:(NSUInteger)section sectionFrame:(CGRect)rect {
+  NSIndexPath *sectionIndexPath = [NSIndexPath indexPathForItem:0 inSection:section];
+  UICollectionViewLayoutAttributes *emptyBackgroundAttributes = [self layoutAttributesForDecorationViewAtIndexPath:sectionIndexPath ofKind:INSEPGLayoutElementKindEmptySectionBackground withItemCache:self.emptySectionBackground];
+  
+  // Use content offset and collection view bounds to set the frame dynamically to match the viewport.
+  CGFloat contentOffsetX = self.collectionView.contentOffset.x;
+  CGFloat contentOffsetY = self.collectionView.contentOffset.y;
+  CGFloat visibleWidth = self.collectionView.bounds.size.width;
+  CGFloat visibleHeight = self.collectionView.bounds.size.height;
+  
+  CGFloat startWidth = rect.size.width * 0.8;
+  emptyBackgroundAttributes.frame = CGRectMake(contentOffsetX + startWidth,                   // X position is the content offset
+                                               rect.origin.y,                         // The Y position calculated for the section
+                                               visibleWidth - startWidth,                     // Width is the visible part of the collection view
+                                               fmin(self.sectionHeight, visibleHeight - contentOffsetY) // Height is limited by section height and viewport
+                                               );
+  
+  // Ensure it is behind other elements
+  emptyBackgroundAttributes.zIndex = INSEPGLayoutMinBackgroundZ;
+  self.emptySectionBackground[sectionIndexPath] = emptyBackgroundAttributes;
 }
 
 - (void)prepareHorizontalGridlineAttributesForSection:(NSUInteger)section
@@ -901,24 +932,20 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   
   if (decorationViewKind == INSEPGLayoutElementKindCurrentTimeIndicator) {
     return self.currentTimeIndicatorAttributes[indexPathKey];
-  }
-  else if (decorationViewKind == INSEPGLayoutElementKindCurrentTimeIndicatorVerticalGridline) {
+  } else if (decorationViewKind == INSEPGLayoutElementKindCurrentTimeIndicatorVerticalGridline) {
     return self.currentTimeVerticalGridlineAttributes[indexPathKey];
-  }
-  else if (decorationViewKind == INSEPGLayoutElementKindVerticalGridline) {
+  } else if (decorationViewKind == INSEPGLayoutElementKindVerticalGridline) {
     return self.verticalGridlineAttributes[indexPathKey];
-  }
-  else if (decorationViewKind == INSEPGLayoutElementKindHorizontalGridline) {
+  } else if (decorationViewKind == INSEPGLayoutElementKindHorizontalGridline) {
     return self.horizontalGridlineAttributes[indexPathKey];
-  }
-  else if (decorationViewKind == INSEPGLayoutElementKindHourHeaderBackground) {
+  } else if (decorationViewKind == INSEPGLayoutElementKindHourHeaderBackground) {
     return self.hourHeaderBackgroundAttributes[indexPathKey];
-  }
-  else if (decorationViewKind == INSEPGLayoutElementKindSectionHeaderBackground) {
+  } else if (decorationViewKind == INSEPGLayoutElementKindSectionHeaderBackground) {
     return self.hourHeaderBackgroundAttributes[indexPathKey];
-    
   } else if (decorationViewKind == INSEPGLayoutElementKindHalfHourVerticalGridline) {
     return self.verticalHalfHourGridlineAttributes[indexPathKey];
+  } else if (decorationViewKind == INSEPGLayoutElementKindEmptySectionBackground) {
+    return self.emptySectionBackground[indexPathKey];
   }
   return nil;
 }
@@ -1014,7 +1041,11 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   // Horizontal Gridline
   else if (elementKind == INSEPGLayoutElementKindHorizontalGridline) {
     return INSEPGLayoutMinBackgroundZ;
+  }   // Horizontal Gridline
+  else if (elementKind == INSEPGLayoutElementKindEmptySectionBackground) {
+    return INSEPGLayoutMinBackgroundZ;
   }
+  
   
   return CGFLOAT_MIN;
 }
@@ -1180,6 +1211,10 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
     return indexPath;
   }
   return [NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section];
+}
+
+- (BOOL)sectionHasNoPrograms:(NSInteger)section {
+  return [self.collectionView numberOfItemsInSection:section] == 0;
 }
 
 #pragma mark - Size Delegate Wrapper
