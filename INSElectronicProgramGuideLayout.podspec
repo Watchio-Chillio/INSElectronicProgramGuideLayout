@@ -8,8 +8,6 @@ Pod::Spec.new do |s|
   s.source   = { :git => 'https://github.com/inspace-io/INSElectronicProgramGuideLayout.git', :tag => '1.1.1' }
   s.source_files = 'INSElectronicProgramGuideLayout/*.{h,m}'
   s.requires_arc = true
-
-  s.platform = :ios, '15.0'
-  s.platform = :tvos, '15.0'
+  s.platforms = { :ios => "15.0", :tvos => "15.0" }
   s.frameworks = 'UIKit'
 end
