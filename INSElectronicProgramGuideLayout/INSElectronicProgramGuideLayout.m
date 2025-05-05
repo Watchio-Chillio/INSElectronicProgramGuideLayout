@@ -321,6 +321,12 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   [self.allAttributes removeAllObjects];
 }
 
+- (CGFloat)currentTimeVerticalGridLineXPoint
+{
+  NSIndexPath *currentTimeHorizontalGridlineIndexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+  UICollectionViewLayoutAttributes *currentTimeHorizontalGridlineAttributes = [self layoutAttributesForDecorationViewAtIndexPath:currentTimeHorizontalGridlineIndexPath ofKind:INSEPGLayoutElementKindCurrentTimeIndicatorVerticalGridline withItemCache:self.currentTimeVerticalGridlineAttributes];
+  return currentTimeHorizontalGridlineAttributes.frame.origin.x;
+}
 
 #pragma mark Minute Updates
 
