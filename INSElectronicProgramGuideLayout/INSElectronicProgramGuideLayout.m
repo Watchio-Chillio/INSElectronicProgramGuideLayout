@@ -636,14 +636,12 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   // Use content offset and collection view bounds to set the frame dynamically to match the viewport.
   CGFloat contentOffsetX = self.collectionView.contentOffset.x;
   CGFloat visibleWidth = self.collectionView.bounds.size.width;
-  
-  CGFloat startWidth = 0;//rect.size.width + self.sectionGap;
-  emptyBackgroundAttributes.frame = CGRectMake(contentOffsetX + startWidth,                   // X position is the content offset
-                                               rect.origin.y,                         // The Y position calculated for the section
-                                               visibleWidth - startWidth,                     // Width is the visible part of the collection view
-                                               self.sectionHeight          // Height is limited by section height and viewport
-                                               );
-  
+
+  CGFloat startWidth = rect.size.width + self.sectionGap;
+  CGFloat originX = contentOffsetX + startWidth;
+  CGFloat width = visibleWidth - self.sectionGap - startWidth;
+  emptyBackgroundAttributes.frame = CGRectMake(originX, rect.origin.y, width, self.sectionHeight);
+
   // Ensure it is behind other elements
   emptyBackgroundAttributes.zIndex = INSEPGLayoutMinBackgroundZ;
   self.emptySectionBackground[sectionIndexPath] = emptyBackgroundAttributes;
