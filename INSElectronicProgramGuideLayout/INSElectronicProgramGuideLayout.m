@@ -206,15 +206,39 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
   
   self.numberOfChannels = 0;
   
+  self.automaticallyTicksCurrentTime = YES;
+  [self setupMinuteTimerIfNeeded];
+}
+
+- (void)setupMinuteTimerIfNeeded
+{
+  if (!self.automaticallyTicksCurrentTime) {
+    [self.minuteTimer invalidate];
+    self.minuteTimer = nil;
+    return;
+  }
+  if (self.minuteTimer) {
+    return;
+  }
+
   // Invalidate layout on minute ticks (to update the position of the current time indicator)
   NSDate *oneMinuteInFuture = [[NSDate date] dateByAddingTimeInterval:60];
   NSDateComponents *components = [[NSCalendar currentCalendar] components:(NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute) fromDate:oneMinuteInFuture];
   NSDate *nextMinuteBoundary = [[NSCalendar currentCalendar] dateFromComponents:components];
-  
+
   // This needs to be a weak reference, otherwise we get a retain cycle
   INSTimerWeakTarget *timerWeakTarget = [[INSTimerWeakTarget alloc] initWithTarget:self selector:@selector(minuteTick:)];
   self.minuteTimer = [[NSTimer alloc] initWithFireDate:nextMinuteBoundary interval:60 target:timerWeakTarget selector:timerWeakTarget.fireSelector userInfo:nil repeats:YES];
   [[NSRunLoop currentRunLoop] addTimer:self.minuteTimer forMode:NSDefaultRunLoopMode];
+}
+
+- (void)setAutomaticallyTicksCurrentTime:(BOOL)automaticallyTicksCurrentTime
+{
+  if (_automaticallyTicksCurrentTime == automaticallyTicksCurrentTime) {
+    return;
+  }
+  _automaticallyTicksCurrentTime = automaticallyTicksCurrentTime;
+  [self setupMinuteTimerIfNeeded];
 }
 
 #pragma mark - Public
@@ -331,6 +355,11 @@ NSUInteger const INSEPGLayoutMinBackgroundZ = 0.0;
 #pragma mark Minute Updates
 
 - (void)minuteTick:(id)sender
+{
+  [self tickCurrentTime];
+}
+
+- (void)tickCurrentTime
 {
   // Invalidate cached current date componets (since the minute's changed!)
   self.cachedCurrentDate = nil;

@@ -158,6 +158,22 @@ typedef NS_ENUM(NSUInteger, INSElectronicProgramGuideLayoutType) {
  */
 - (void)scrollToCurrentTimeAnimated:(BOOL)animated;
 
+/**
+ *  Controls whether the layout runs its own internal 60-second timer to move the
+ *  current-time indicator. Default YES. Set to NO if you want to drive updates
+ *  externally (e.g. align with a data-refresh cadence) and call `tickCurrentTime`
+ *  yourself.
+ */
+@property (nonatomic, assign) BOOL automaticallyTicksCurrentTime;
+
+/**
+ *  Invalidate the cached current-date and trigger a layout pass so the current-time
+ *  indicator and vertical gridline move to their new position. Called internally by
+ *  the minute timer; exposed for callers that have `automaticallyTicksCurrentTime`
+ *  set to NO.
+ */
+- (void)tickCurrentTime;
+
 // Since a "reloadData" on the UICollectionView doesn't call "prepareForCollectionViewUpdates:", this method must be called first to flush the internal caches
 - (void)invalidateLayoutCache;
 
